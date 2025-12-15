@@ -1,80 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Remove Black & Adjust Opacity</title>
-  <style>
-    body { font-family: Arial, sans-serif; }
-    #canvas { border: 1px solid #000; margin-top: 20px; display:block; }
-    input, button { margin: 20px 0; padding: 8px; font-size:16px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Remove Black Like Roblox Particles</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#222; color:white; text-align:center; }
+  canvas { border:1px solid #555; margin-top:20px; display:block; margin-left:auto; margin-right:auto; }
+  input, button { margin-top:20px; padding:8px; font-size:16px; }
+</style>
 </head>
 <body>
 
-  <h2>Upload an image to remove black and adjust opacity</h2>
-  <input type="file" id="upload" accept="image/*">
-  <canvas id="canvas"></canvas>
-  <br>
-  <button id="download">Download PNG</button>
+<h2>Upload an image to remove black (like Roblox particles)</h2>
+<input type="file" id="upload" accept="image/*"><br>
+<canvas id="canvas"></canvas><br>
+<button id="download">Download PNG</button>
 
-  <script>
-    const upload = document.getElementById('upload');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const downloadBtn = document.getElementById('download');
-    let processed = false;
+<script>
+const upload = document.getElementById('upload');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const downloadBtn = document.getElementById('download');
+let processed = false;
 
-    upload.addEventListener('change', e => {
-      const file = e.target.files[0];
-      const img = new Image();
+upload.addEventListener('change', e => {
+  const file = e.target.files[0];
+  const img = new Image();
 
-      img.onload = function() {
-        // Set canvas size
-        canvas.width = img.width;
-        canvas.height = img.height;
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img,0,0);
 
-        // Draw the image to the canvas
-        ctx.drawImage(img, 0, 0);
-        
-        // Get image data
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imgData.data;
+    const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const data = imgData.data;
 
-        // Loop through all the pixels
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];     
-          const g = data[i + 1]; 
-          const b = data[i + 2]; 
-          const a = data[i + 3]; 
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i+1];
+      const b = data[i+2];
 
-          // Calculate luminance
-          const luminance = (r * 0.2126 + g * 0.7152 + b * 0.0722);
+      // If pixel is completely black, make it transparent
+      if (r === 0 && g === 0 && b === 0) {
+        data[i+3] = 0; // alpha = 0
+      }
+      // Otherwise, leave the color as-is
+    }
 
-          // Calculate opacity based on luminance
-          const opacity = Math.max(0, Math.min(1, (luminance / 255)));
+    ctx.putImageData(imgData,0,0);
+    processed = true;
+  };
 
-          // Set alpha channel
-          data[i + 3] = opacity * 255;
-        }
+  img.src = URL.createObjectURL(file);
+});
 
-        // Update the canvas
-        ctx.putImageData(imgData, 0, 0);
-        processed = true;
-      };
-
-      img.src = URL.createObjectURL(file);
-    });
-
-    // Download button
-    downloadBtn.onclick = () => {
-      if (!processed) return alert("Upload and process an image first.");
-      const link = document.createElement("a");
-      link.download = "remove-black.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    };
-  </script>
+// Download button
+downloadBtn.onclick = () => {
+  if (!processed) return alert("Upload and process an image first.");
+  const link = document.createElement("a");
+  link.download = "particle-style.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+};
+</script>
 
 </body>
 </html>
