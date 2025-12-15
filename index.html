@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Remove Black Like Roblox Particles</title>
+<title>Roblox Particle Style Brightening</title>
 <style>
   body { font-family: Arial, sans-serif; background:#222; color:white; text-align:center; }
   canvas { border:1px solid #555; margin-top:20px; display:block; margin-left:auto; margin-right:auto; }
@@ -12,7 +12,7 @@
 </head>
 <body>
 
-<h2>Upload an image to remove black (like Roblox particles)</h2>
+<h2>Upload an image to convert like Roblox particles</h2>
 <input type="file" id="upload" accept="image/*"><br>
 <canvas id="canvas"></canvas><br>
 <button id="download">Download PNG</button>
@@ -37,15 +37,24 @@ upload.addEventListener('change', e => {
     const data = imgData.data;
 
     for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i+1];
-      const b = data[i+2];
+      let r = data[i];
+      let g = data[i+1];
+      let b = data[i+2];
+      let a = data[i+3];
 
-      // If pixel is completely black, make it transparent
-      if (r === 0 && g === 0 && b === 0) {
-        data[i+3] = 0; // alpha = 0
+      // Find the max channel (red, green, or blue)
+      let maxChannel = Math.max(r, g, b);
+
+      if (maxChannel === 0) {
+        // pixel is pure black, make transparent
+        data[i+3] = 0;
+      } else {
+        // scale each channel to preserve hue but remove black
+        data[i]   = Math.round(r / maxChannel * 255);
+        data[i+1] = Math.round(g / maxChannel * 255);
+        data[i+2] = Math.round(b / maxChannel * 255);
+        // alpha stays the same
       }
-      // Otherwise, leave the color as-is
     }
 
     ctx.putImageData(imgData,0,0);
@@ -59,7 +68,7 @@ upload.addEventListener('change', e => {
 downloadBtn.onclick = () => {
   if (!processed) return alert("Upload and process an image first.");
   const link = document.createElement("a");
-  link.download = "particle-style.png";
+  link.download = "roblox-particle.png";
   link.href = canvas.toDataURL("image/png");
   link.click();
 };
