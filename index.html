@@ -5,19 +5,22 @@
 <title>Remove Black Properly</title>
 <style>
   body { background:#222; color:white; font-family:sans-serif; }
-  canvas { border:1px solid #555; margin-top:10px; }
+  canvas { border:1px solid #555; margin-top:10px; display:block; }
+  button { margin-top:10px; padding:10px; font-size:16px; }
 </style>
 </head>
 <body>
 
-<input type="file" id="upload" accept="image/*">
-<br>
+<input type="file" id="upload" accept="image/*"><br>
 <canvas id="canvas"></canvas>
+<button id="download">Download PNG</button>
 
 <script>
 const upload = document.getElementById("upload");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const downloadBtn = document.getElementById("download");
+let processed = false;
 
 upload.onchange = e => {
   const img = new Image();
@@ -35,17 +38,23 @@ upload.onchange = e => {
       let b = d[i+2];
       let a = d[i+3];
 
-      // how much black is in this pixel
       let maxRGB = Math.max(r,g,b);
-      let blackAmount = 1 - (maxRGB / 255); // 0 = no black, 1 = full black
-
-      // apply transparency ONLY from black
+      let blackAmount = 1 - (maxRGB / 255);
       d[i+3] = a * (1 - blackAmount);
     }
 
     ctx.putImageData(imgData,0,0);
+    processed = true;
   };
   img.src = URL.createObjectURL(e.target.files[0]);
+};
+
+downloadBtn.onclick = () => {
+  if (!processed) return alert("Upload and process an image first.");
+  const link = document.createElement("a");
+  link.download = "remove-black.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
 };
 </script>
 
