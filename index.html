@@ -1,68 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Remove Black & Adjust Opacity</title>
-  <style>
-    body { font-family: Arial, sans-serif; }
-    #canvas { border: 1px solid #000; margin-top: 20px; }
-    input { margin: 20px 0; }
-  </style>
+<meta charset="UTF-8">
+<title>Remove Black Properly</title>
+<style>
+  body { background:#222; color:white; font-family:sans-serif; }
+  canvas { border:1px solid #555; margin-top:10px; }
+</style>
 </head>
 <body>
 
-  <h2>Upload an image to remove black and adjust opacity</h2>
-  <input type="file" id="upload" accept="image/*">
-  <canvas id="canvas"></canvas>
+<input type="file" id="upload" accept="image/*">
+<br>
+<canvas id="canvas"></canvas>
 
-  <script>
-    const upload = document.getElementById('upload');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+<script>
+const upload = document.getElementById("upload");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-    upload.addEventListener('change', e => {
-      const file = e.target.files[0];
-      const img = new Image();
+upload.onchange = e => {
+  const img = new Image();
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img,0,0);
 
-      img.onload = function() {
-        // Set canvas size
-        canvas.width = img.width;
-        canvas.height = img.height;
+    const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const d = imgData.data;
 
-        // Draw the image to the canvas
-        ctx.drawImage(img, 0, 0);
-        
-        // Get image data
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      let r = d[i];
+      let g = d[i+1];
+      let b = d[i+2];
+      let a = d[i+3];
 
-        // Loop through all the pixels
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];     // Red channel
-          const g = data[i + 1]; // Green channel
-          const b = data[i + 2]; // Blue channel
-          const a = data[i + 3]; // Alpha channel
+      // how much black is in this pixel
+      let maxRGB = Math.max(r,g,b);
+      let blackAmount = 1 - (maxRGB / 255); // 0 = no black, 1 = full black
 
-          // Calculate luminance to detect how dark the pixel is
-          const luminance = (r * 0.2126 + g * 0.7152 + b * 0.0722);
+      // apply transparency ONLY from black
+      d[i+3] = a * (1 - blackAmount);
+    }
 
-          // Calculate opacity based on how dark the pixel is
-          // 100% black (0 luminance) = 0% opacity, 50% black = 50% opacity, etc.
-          const opacity = Math.max(0, Math.min(1, (luminance / 255)));
-
-          // Adjust the alpha value (opacity) based on the luminance
-          data[i + 3] = opacity * 255; // Set the alpha channel (opacity)
-        }
-
-        // Update the canvas with the new image data
-        ctx.putImageData(imgData, 0, 0);
-      };
-
-      // Load the image from the file input
-      img.src = URL.createObjectURL(file);
-    });
-  </script>
+    ctx.putImageData(imgData,0,0);
+  };
+  img.src = URL.createObjectURL(e.target.files[0]);
+};
+</script>
 
 </body>
 </html>
